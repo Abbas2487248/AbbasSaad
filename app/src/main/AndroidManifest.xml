@@ -10,6 +10,10 @@
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false">
 
+        <service
+            android:name=".FloatingMenuService"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
