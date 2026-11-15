@@ -22,7 +22,12 @@ import androidx.compose.ui.unit.sp
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MagicLinesScreen(onEnableFloating = { enableFloatingMenu() }) }
+        setContent {
+            MagicLinesScreen(
+                onEnableFloating = { enableFloatingMenu() },
+                onOpenSettings = { openLocalSettings() }
+            )
+        }
     }
 
     override fun onResume() {
@@ -40,10 +45,14 @@ class MainActivity : ComponentActivity() {
             startService(Intent(this, FloatingMenuService::class.java))
         }
     }
+
+    private fun openLocalSettings() {
+        startActivity(Intent(this, LocalSettingsActivity::class.java))
+    }
 }
 
 @Composable
-fun MagicLinesScreen(onEnableFloating: () -> Unit) {
+fun MagicLinesScreen(onEnableFloating: () -> Unit, onOpenSettings: () -> Unit) {
     val background = Color(0xFF10131D)
     val panel = Color(0xFF1B2232)
     val accent = Color(0xFF35D6C2)
@@ -72,7 +81,7 @@ fun MagicLinesScreen(onEnableFloating: () -> Unit) {
                     Text(status, color = Color.White)
                 }
             }
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(18.dp))
             Button(
                 onClick = {
                     status = "Enable display-over-other-apps permission, then return here. The floating button will appear."
@@ -80,15 +89,13 @@ fun MagicLinesScreen(onEnableFloating: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = accent)
-            ) {
-                Text("ENABLE FLOATING MENU", color = Color.Black)
+            ) { Text("ENABLE FLOATING MENU", color = Color.Black) }
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) {
+                Text("LOCAL SETTINGS", color = accent)
             }
             Spacer(Modifier.height(15.dp))
-            Text(
-                "Drag the ML bubble. Tap it to open the offline menu.",
-                color = Color.Gray,
-                fontSize = 12.sp
-            )
+            Text("Drag the ML bubble. Tap it to open the offline menu.", color = Color.Gray, fontSize = 12.sp)
         }
     }
 }
