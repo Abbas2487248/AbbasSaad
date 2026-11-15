@@ -86,6 +86,13 @@ class FloatingMenuService : Service() {
         windowManager.addView(view, bubbleParams)
     }
 
+    private fun openSettings() {
+        val intent = Intent(this, LocalSettingsActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
+    }
+
     private fun toggleMenu() {
         if (menu != null) {
             try { windowManager.removeView(menu) } catch (_: Exception) {}
@@ -107,7 +114,7 @@ class FloatingMenuService : Service() {
             panel.addView(item)
         }
         addLine("MAGICLINES  •  OFFLINE", Color.rgb(53, 214, 194))
-        addLine("Local settings — coming next", Color.LTGRAY)
+        addLine("Local settings", Color.WHITE) { openSettings() }
         addLine("Close menu", Color.WHITE) { toggleMenu() }
         menuParams = overlayParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT).apply {
             x = bubbleParams.x
