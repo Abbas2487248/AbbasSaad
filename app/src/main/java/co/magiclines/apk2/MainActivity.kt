@@ -29,6 +29,7 @@ fun MagicLinesScreen() {
     val background = Color(0xFF10131D)
     val panel = Color(0xFF1B2232)
     val accent = Color(0xFF35D6C2)
+    var status by remember { mutableStateOf("Offline mode — account status not checked") }
 
     MaterialTheme {
         Column(
@@ -63,27 +64,27 @@ fun MagicLinesScreen() {
                 Column(Modifier.padding(20.dp)) {
                     Text("8 Ball Pool", color = Color.White, fontSize = 20.sp)
                     Spacer(Modifier.height(12.dp))
-                    Text("Status: Not Installed", color = Color.LightGray)
+                    Text("Connection: Offline", color = accent)
                     Spacer(Modifier.height(8.dp))
                     Text("ACCOUNT STATUS", color = accent)
-                    Text("Current State: Checking...", color = Color.White)
+                    Text(status, color = Color.White)
                 }
             }
 
             Spacer(Modifier.height(22.dp))
 
             Button(
-                onClick = {},
+                onClick = { status = "Offline interface is ready. Online account verification is unavailable." },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = accent)
             ) {
-                Text("INITIALIZE", color = Color.Black)
+                Text("OPEN OFFLINE MODE", color = Color.Black)
             }
 
             Spacer(Modifier.height(15.dp))
 
             Text(
-                "MagicLines Running...",
+                "Running locally on this device",
                 color = Color.Gray,
                 fontSize = 12.sp
             )
