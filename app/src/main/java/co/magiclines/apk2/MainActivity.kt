@@ -1,6 +1,10 @@
 package co.magiclines.apk2
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -18,14 +22,28 @@ import androidx.compose.ui.unit.sp
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            MagicLinesScreen()
+        setContent { MagicLinesScreen(onEnableFloating = { enableFloatingMenu() }) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
+            startService(Intent(this, FloatingMenuService::class.java))
+        }
+    }
+
+    private fun enableFloatingMenu() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            startActivity(intent)
+        } else {
+            startService(Intent(this, FloatingMenuService::class.java))
         }
     }
 }
 
 @Composable
-fun MagicLinesScreen() {
+fun MagicLinesScreen(onEnableFloating: () -> Unit) {
     val background = Color(0xFF10131D)
     val panel = Color(0xFF1B2232)
     val accent = Color(0xFF35D6C2)
@@ -33,29 +51,13 @@ fun MagicLinesScreen() {
 
     MaterialTheme {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(background)
-                .padding(20.dp),
+            modifier = Modifier.fillMaxSize().background(background).padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(30.dp))
-
-            Text(
-                "MAGICLINES",
-                color = accent,
-                fontSize = 29.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                "Version 5.0",
-                color = Color.LightGray,
-                fontSize = 13.sp
-            )
-
+            Text("MAGICLINES", color = accent, fontSize = 29.sp, fontWeight = FontWeight.Bold)
+            Text("Version 5.0", color = Color.LightGray, fontSize = 13.sp)
             Spacer(Modifier.height(30.dp))
-
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = panel),
@@ -70,21 +72,20 @@ fun MagicLinesScreen() {
                     Text(status, color = Color.White)
                 }
             }
-
             Spacer(Modifier.height(22.dp))
-
             Button(
-                onClick = { status = "Offline interface is ready. Online account verification is unavailable." },
+                onClick = {
+                    status = "Enable display-over-other-apps permission, then return here. The floating button will appear."
+                    onEnableFloating()
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = accent)
             ) {
-                Text("OPEN OFFLINE MODE", color = Color.Black)
+                Text("ENABLE FLOATING MENU", color = Color.Black)
             }
-
             Spacer(Modifier.height(15.dp))
-
             Text(
-                "Running locally on this device",
+                "Drag the ML bubble. Tap it to open the offline menu.",
                 color = Color.Gray,
                 fontSize = 12.sp
             )
