@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -23,13 +25,16 @@ class LocalSettingsActivity : ComponentActivity() {
             val background = Color(0xFF10131D)
             val panel = Color(0xFF1B2232)
             var showGuide by remember { mutableStateOf(prefs.getBoolean("show_guide", true)) }
+            var manualGuideEnabled by remember { mutableStateOf(prefs.getBoolean("manual_guide_enabled", false)) }
             var keepPanelOpen by remember { mutableStateOf(prefs.getBoolean("keep_panel_open", false)) }
             var lineWidth by remember { mutableFloatStateOf(prefs.getFloat("line_width", 2f)) }
             var opacity by remember { mutableFloatStateOf(prefs.getFloat("opacity", 75f)) }
+            var guideAngle by remember { mutableFloatStateOf(prefs.getFloat("guide_angle", -90f)) }
+            var guideLength by remember { mutableFloatStateOf(prefs.getFloat("guide_length", 55f)) }
 
             MaterialTheme {
                 Column(
-                    Modifier.fillMaxSize().background(background).padding(20.dp),
+                    Modifier.fillMaxSize().background(background).verticalScroll(rememberScrollState()).padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text("LOCAL SETTINGS", color = accent, fontSize = 25.sp, fontWeight = FontWeight.Bold)
@@ -50,7 +55,24 @@ class LocalSettingsActivity : ComponentActivity() {
                                 })
                             }
                             Divider(color = Color.DarkGray)
-                            Text("VISUAL PREFERENCES", color = accent, fontWeight = FontWeight.Bold)
+                            Text("MANUAL GUIDE LINE", color = accent, fontWeight = FontWeight.Bold)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Show guide line", color = Color.White)
+                                Switch(checked = manualGuideEnabled, onCheckedChange = {
+                                    manualGuideEnabled = it
+                                    prefs.edit().putBoolean("manual_guide_enabled", it).apply()
+                                })
+                            }
+                            Text("Angle: ${guideAngle.toInt()}°", color = Color.White)
+                            Slider(value = guideAngle, onValueChange = {
+                                guideAngle = it; prefs.edit().putFloat("guide_angle", it).apply()
+                            }, valueRange = -180f..180f)
+                            Text("Length: ${guideLength.toInt()}%", color = Color.White)
+                            Slider(value = guideLength, onValueChange = {
+                                guideLength = it; prefs.edit().putFloat("guide_length", it).apply()
+                            }, valueRange = 10f..95f)
+                            Divider(color = Color.DarkGray)
+                            Text("LINE APPEARANCE", color = accent, fontWeight = FontWeight.Bold)
                             Text("Line width: ${lineWidth.toInt()}", color = Color.White)
                             Slider(value = lineWidth, onValueChange = {
                                 lineWidth = it; prefs.edit().putFloat("line_width", it).apply()
@@ -61,8 +83,7 @@ class LocalSettingsActivity : ComponentActivity() {
                             }, valueRange = 10f..100f)
                         }
                     }
-                    Text("These preferences are stored locally. They do not control or automate gameplay.", color = Color.Gray, fontSize = 12.sp)
-                    Spacer(Modifier.weight(1f))
+                    Text("This is a manually adjusted visual guide. It does not detect balls, calculate shots, or control gameplay.", color = Color.Gray, fontSize = 12.sp)
                     Button(onClick = { finish() }, modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = accent)) {
                         Text("DONE", color = Color.Black)
