@@ -2,7 +2,7 @@ name: Build MagicLines APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, manual-guide-overlay ]
   workflow_dispatch:
 
 permissions:
