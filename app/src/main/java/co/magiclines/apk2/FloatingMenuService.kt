@@ -2,6 +2,7 @@ package co.magiclines.apk2
 
 import android.app.Service
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
@@ -17,8 +18,19 @@ class FloatingMenuService : Service() {
     private lateinit var windowManager: WindowManager
     private var bubble: TextView? = null
     private var menu: LinearLayout? = null
+    private var guideOverlay: ManualGuideOverlayView? = null
+    private var guideParams: WindowManager.LayoutParams? = null
     private lateinit var bubbleParams: WindowManager.LayoutParams
     private var menuParams: WindowManager.LayoutParams? = null
+    private lateinit var preferences: SharedPreferences
+    private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == null || key in setOf(
+                "manual_guide_enabled", "guide_angle", "guide_length", "line_width", "opacity"
+            )
+        ) {
+            refreshManualGuide()
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -29,7 +41,10 @@ class FloatingMenuService : Service() {
             return
         }
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        preferences = getSharedPreferences("magiclines_local_settings", MODE_PRIVATE)
+        preferences.registerOnSharedPreferenceChangeListener(preferenceListener)
         showBubble()
+        refreshManualGuide()
     }
 
     private fun overlayParams(width: Int, height: Int): WindowManager.LayoutParams {
@@ -51,7 +66,7 @@ class FloatingMenuService : Service() {
             gravity = Gravity.CENTER
             setBackgroundColor(Color.rgb(53, 214, 194))
             elevation = 12f
-            val opacity = getSharedPreferences("magiclines_local_settings", MODE_PRIVATE).getFloat("opacity", 75f)
+            val opacity = preferences.getFloat("opacity", 75f)
             alpha = (opacity / 100f).coerceIn(0.1f, 1f)
         }
         bubbleParams = overlayParams(58, 58).apply { x = 24; y = 180 }
@@ -88,14 +103,38 @@ class FloatingMenuService : Service() {
         windowManager.addView(view, bubbleParams)
     }
 
+    private fun refreshManualGuide() {
+        if (!::windowManager.isInitialized || !::preferences.isInitialized) return
+        val enabled = preferences.getBoolean("manual_guide_enabled", false)
+        if (!enabled) {
+            try { guideOverlay?.let { windowManager.removeView(it) } } catch (_: Exception) {}
+            guideOverlay = null
+            guideParams = null
+            return
+        }
+        val overlay = guideOverlay ?: ManualGuideOverlayView(this).also {
+            val params = overlayParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT
+            ).apply {
+                flags = flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            }
+            guideOverlay = it
+            guideParams = params
+            windowManager.addView(it, params)
+        }
+        overlay.updateFromPreferences(preferences)
+        bubble?.bringToFront()
+        menu?.bringToFront()
+    }
+
     private fun closeMenu() {
         try { menu?.let { windowManager.removeView(it) } } catch (_: Exception) {}
         menu = null
     }
 
     private fun openSettings() {
-        val keepOpen = getSharedPreferences("magiclines_local_settings", MODE_PRIVATE)
-            .getBoolean("keep_panel_open", false)
+        val keepOpen = preferences.getBoolean("keep_panel_open", false)
         if (!keepOpen) closeMenu()
         val intent = Intent(this, LocalSettingsActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -122,11 +161,14 @@ class FloatingMenuService : Service() {
             }
             panel.addView(item)
         }
-        val showGuide = getSharedPreferences("magiclines_local_settings", MODE_PRIVATE)
-            .getBoolean("show_guide", true)
-        if (showGuide) {
+        if (preferences.getBoolean("show_guide", true)) {
             addLine("MAGICLINES  •  OFFLINE", Color.rgb(53, 214, 194))
-            addLine("Offline helper — no gameplay automation", Color.LTGRAY)
+            addLine("Manual visual guide • no auto-play", Color.LTGRAY)
+        }
+        val guideEnabled = preferences.getBoolean("manual_guide_enabled", false)
+        addLine(if (guideEnabled) "Hide manual guide line" else "Show manual guide line") {
+            preferences.edit().putBoolean("manual_guide_enabled", !guideEnabled).apply()
+            closeMenu()
         }
         addLine("Local settings", Color.WHITE) { openSettings() }
         addLine("Close menu", Color.WHITE) { closeMenu() }
@@ -139,9 +181,11 @@ class FloatingMenuService : Service() {
     }
 
     override fun onDestroy() {
+        preferences.unregisterOnSharedPreferenceChangeListener(preferenceListener)
         try { bubble?.let { windowManager.removeView(it) } } catch (_: Exception) {}
         try { menu?.let { windowManager.removeView(it) } } catch (_: Exception) {}
-        bubble = null; menu = null
+        try { guideOverlay?.let { windowManager.removeView(it) } } catch (_: Exception) {}
+        bubble = null; menu = null; guideOverlay = null
         super.onDestroy()
     }
 }
