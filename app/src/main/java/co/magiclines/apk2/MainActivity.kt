@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,7 +15,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,48 +58,104 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MagicLinesScreen(onEnableFloating: () -> Unit, onOpenSettings: () -> Unit) {
     val background = Color(0xFF10131D)
-    val panel = Color(0xFF1B2232)
-    val accent = Color(0xFF35D6C2)
-    var status by remember { mutableStateOf("Offline mode — account status not checked") }
+    val panel = Color(0xFF201E25)
+    val accent = Color(0xFFE8C99A)
+    val teal = Color(0xFF35D6C2)
+    var status by remember { mutableStateOf("Offline — account status has not been checked") }
 
     MaterialTheme {
-        Column(
-            modifier = Modifier.fillMaxSize().background(background).padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(background)
         ) {
-            Spacer(Modifier.height(30.dp))
-            Text("MAGICLINES", color = accent, fontSize = 29.sp, fontWeight = FontWeight.Bold)
-            Text("Version 5.0", color = Color.LightGray, fontSize = 13.sp)
-            Spacer(Modifier.height(30.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = panel),
-                shape = RoundedCornerShape(18.dp)
+            Image(
+                painter = painterResource(R.drawable.sbg),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.34f
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(Modifier.padding(20.dp)) {
-                    Text("8 Ball Pool", color = Color.White, fontSize = 20.sp)
-                    Spacer(Modifier.height(12.dp))
-                    Text("Connection: Offline", color = accent)
-                    Spacer(Modifier.height(8.dp))
-                    Text("ACCOUNT STATUS", color = accent)
-                    Text(status, color = Color.White)
+                Spacer(Modifier.height(12.dp))
+                Image(
+                    painter = painterResource(R.drawable.layr5),
+                    contentDescription = "MagicLines 8 logo",
+                    modifier = Modifier
+                        .fillMaxWidth(0.82f)
+                        .height(150.dp),
+                    contentScale = ContentScale.Fit
+                )
+                Text("VERSION 5.0", color = accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(18.dp))
+                Image(
+                    painter = painterResource(R.drawable.slides_1),
+                    contentDescription = "Welcome to MagicLines",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(158.dp)
+                        .clip(RoundedCornerShape(18.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(Modifier.height(18.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = panel.copy(alpha = 0.94f)),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Column(Modifier.padding(18.dp)) {
+                        Text("8 BALL POOL", color = accent, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(10.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                Modifier
+                                    .size(9.dp)
+                                    .clip(RoundedCornerShape(50))
+                                    .background(teal)
+                            )
+                            Spacer(Modifier.width(9.dp))
+                            Text("CONNECTION: OFFLINE", color = teal, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Spacer(Modifier.height(14.dp))
+                        Text("ACCOUNT STATUS", color = accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(4.dp))
+                        Text(status, color = Color.White, fontSize = 13.sp)
+                    }
                 }
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        status = "Allow display-over-other-apps permission, then return to MagicLines."
+                        onEnableFloating()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = accent)
+                ) {
+                    Text("ENABLE FLOATING MENU", color = Color(0xFF17131A), fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(10.dp))
+                OutlinedButton(
+                    onClick = onOpenSettings,
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)
+                ) {
+                    Text("LOCAL SETTINGS", fontWeight = FontWeight.SemiBold)
+                }
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "OFFLINE HELPER  •  MANUAL CONTROLS",
+                    color = Color.LightGray.copy(alpha = 0.75f),
+                    fontSize = 10.sp,
+                    letterSpacing = 1.sp
+                )
             }
-            Spacer(Modifier.height(18.dp))
-            Button(
-                onClick = {
-                    status = "Enable display-over-other-apps permission, then return here. The floating button will appear."
-                    onEnableFloating()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = accent)
-            ) { Text("ENABLE FLOATING MENU", color = Color.Black) }
-            Spacer(Modifier.height(10.dp))
-            OutlinedButton(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) {
-                Text("LOCAL SETTINGS", color = accent)
-            }
-            Spacer(Modifier.height(15.dp))
-            Text("Drag the ML bubble. Tap it to open the offline menu.", color = Color.Gray, fontSize = 12.sp)
         }
     }
 }
