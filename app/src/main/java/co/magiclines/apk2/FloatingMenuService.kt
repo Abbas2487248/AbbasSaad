@@ -51,6 +51,8 @@ class FloatingMenuService : Service() {
             gravity = Gravity.CENTER
             setBackgroundColor(Color.rgb(53, 214, 194))
             elevation = 12f
+            val opacity = getSharedPreferences("magiclines_local_settings", MODE_PRIVATE).getFloat("opacity", 75f)
+            alpha = (opacity / 100f).coerceIn(0.1f, 1f)
         }
         bubbleParams = overlayParams(58, 58).apply { x = 24; y = 180 }
         view.setOnTouchListener(object : View.OnTouchListener {
@@ -86,7 +88,15 @@ class FloatingMenuService : Service() {
         windowManager.addView(view, bubbleParams)
     }
 
+    private fun closeMenu() {
+        try { menu?.let { windowManager.removeView(it) } } catch (_: Exception) {}
+        menu = null
+    }
+
     private fun openSettings() {
+        val keepOpen = getSharedPreferences("magiclines_local_settings", MODE_PRIVATE)
+            .getBoolean("keep_panel_open", false)
+        if (!keepOpen) closeMenu()
         val intent = Intent(this, LocalSettingsActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
@@ -95,8 +105,7 @@ class FloatingMenuService : Service() {
 
     private fun toggleMenu() {
         if (menu != null) {
-            try { windowManager.removeView(menu) } catch (_: Exception) {}
-            menu = null
+            closeMenu()
             return
         }
         val panel = LinearLayout(this).apply {
@@ -113,9 +122,14 @@ class FloatingMenuService : Service() {
             }
             panel.addView(item)
         }
-        addLine("MAGICLINES  •  OFFLINE", Color.rgb(53, 214, 194))
+        val showGuide = getSharedPreferences("magiclines_local_settings", MODE_PRIVATE)
+            .getBoolean("show_guide", true)
+        if (showGuide) {
+            addLine("MAGICLINES  •  OFFLINE", Color.rgb(53, 214, 194))
+            addLine("Offline helper — no gameplay automation", Color.LTGRAY)
+        }
         addLine("Local settings", Color.WHITE) { openSettings() }
-        addLine("Close menu", Color.WHITE) { toggleMenu() }
+        addLine("Close menu", Color.WHITE) { closeMenu() }
         menuParams = overlayParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT).apply {
             x = bubbleParams.x
             y = bubbleParams.y + 66
