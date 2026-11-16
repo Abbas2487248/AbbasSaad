@@ -181,7 +181,9 @@ class FloatingMenuService : Service() {
     }
 
     override fun onDestroy() {
-        preferences.unregisterOnSharedPreferenceChangeListener(preferenceListener)
+        if (::preferences.isInitialized) {
+            preferences.unregisterOnSharedPreferenceChangeListener(preferenceListener)
+        }
         try { bubble?.let { windowManager.removeView(it) } } catch (_: Exception) {}
         try { menu?.let { windowManager.removeView(it) } } catch (_: Exception) {}
         try { guideOverlay?.let { windowManager.removeView(it) } } catch (_: Exception) {}
